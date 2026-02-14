@@ -72,10 +72,23 @@ const deletePost = async (req: Request, res: Response) => {
     }
 };
 
+
+const getBlogStats = async (req: Request, res: Response) => {
+    try {
+        const stats = await PostService.getBlogStats();
+        res.status(200).json(stats);
+    }
+    catch (error) {
+        console.error('Error getting blog stats:', error);
+        res.status(500).json({ message: 'An error occurred while getting the blog stats.' });
+    }
+};
+
 export const PostController = {
     createPost,
     getAllPosts,
     getPostById,
     updatePost,
-    deletePost
+    deletePost,
+    getBlogStats
 };
