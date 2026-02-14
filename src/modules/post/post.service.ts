@@ -17,11 +17,11 @@ const CreatePost = async (payload: Prisma.PostCreateInput): Promise<Post> => {
     return result;
 };
 
-const getAllPosts = async ({ page = 1, limit = 10, search, isFeatured, tags }: {
-    page?: number, limit?: number, search?: string, isFeatured?: boolean, tags?: string[];
+const getAllPosts = async ({ page = 1, limit = 10, search, isFeatured, tags, sortBy = '', sortOrder = 'desc' }: {
+    page?: number, limit?: number, search?: string, isFeatured?: boolean, tags?: string[], sortBy?: string, sortOrder?: 'asc' | 'desc';
 }) => {
     const skip = (page - 1) * limit;
-    console.log("tags", { tags });
+    console.log("tags", { sortBy, sortOrder });
     const where: any = {
         AND: [
             search && {
@@ -35,7 +35,8 @@ const getAllPosts = async ({ page = 1, limit = 10, search, isFeatured, tags }: {
                 tags: {
                     hasSome: tags
                 }
-            }
+            },
+
 
         ].filter(Boolean) // Remove falsy values
     };
@@ -43,26 +44,62 @@ const getAllPosts = async ({ page = 1, limit = 10, search, isFeatured, tags }: {
         {
             skip,
             take: limit,
-            where
+            where,
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                    }
+                }
+            },
+            orderBy: {
+                [sortBy]: sortOrder
+            }
         }
     );
-    return result;
+
+    const total = await prisma.post.count({ where });
+    return {
+        data: result,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 };
 
-const getPostById = async (id: number): Promise<Post | null> => {
-    const result = await prisma.post.findUnique({
-        where: { id },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                }
+const getPostById = async (id: number) => {
+
+    return await prisma.$transaction(async (tx: any) => {
+        await tx.post.update({
+            where: { id },
+            data: {
+                views: { increment: 1 }
             }
-        },
+        });
+
+        const postData = await tx.post.findUnique({
+            where: { id },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    }
+                }
+            },
+        });
+        return postData;
     });
-    return result;
+
+
+
 };
 
 const updatePost = async (id: number, payload: Prisma.PostUpdateInput): Promise<Post> => {

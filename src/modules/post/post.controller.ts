@@ -19,7 +19,10 @@ const getAllPosts = async (req: Request, res: Response) => {
         const search = typeof req.query.search === 'string' ? req.query.search : undefined;
         const isFeatured = req.query.isFeatured ? req.query.isFeatured === 'true' : undefined;
         const tags = req.query.tags ? (req.query.tags as string).split(',') : [];
-        const result = await PostService.getAllPosts({ page, limit, search, isFeatured, tags });
+        const sortBy = typeof req.query.sortBy === 'string' ? req.query.sortBy : 'title';
+        const sortOrder = req.query.sortOrder === 'asc' ? 'asc' : 'desc';
+        const result = await PostService.getAllPosts({ page, limit, search, isFeatured, tags, sortBy, sortOrder });
+
         res.status(200).json(result);
     }
     catch (error) {
