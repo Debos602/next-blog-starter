@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import useRouter from "./modules/user/user.route";
 import postRouter from "./modules/post/post.route";
+import { authrouter } from "./modules/auth/auth.route";
 const app = express();
 
 // Middleware
@@ -19,6 +20,7 @@ app.use(
 
 app.use("/api/v1/user", useRouter);
 app.use("/api/v1/post", postRouter);
+app.use("/api/v1/auth", authrouter);
 
 // Default route for testing
 app.get("/", (_req, res) => {
